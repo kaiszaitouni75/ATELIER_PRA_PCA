@@ -221,27 +221,63 @@ kubectl -n pra patch cronjob sqlite-backup -p '{"spec":{"suspend":false}}'
 ```
 👉 Nous n'avons pas perdu de données mais Kubernetes ne gère pas la restauration tout seul. Nous avons du protéger nos données via des sauvegardes régulières (du PVC pra-data vers le PVC pra-backup). -> **C'est du PRA**. Il s'agit d'une stratégie de sauvegarde avec une procédure de restauration.  
 
+---------------------------------------------------
+Séquence 5 : Exercices  
+Difficulté : Moyenne (~45 minutes)
+---------------------------------------------------
+**Complétez et documentez ce fichier README.md** pour répondre aux questions des exercices.  
+Faites preuve de pédagogie et soyez clair dans vos explications et procedures de travail.  
 
+**Exercice 1 :**  
+Quels sont les composants dont la perte entraîne une perte de données ?  
+  
+* *..Répondez à cet exercice ici..* *
 
+**Exercice 2 :**  
+Expliquez nous pourquoi nous n'avons pas perdu les données lors de la supression du PVC pra-data  
+  
+* *..Répondez à cet exercice ici..* *
 
+**Exercice 3 :**  
+Quels sont les RTO et RPO de cette solution ?  
+  
+* *..Répondez à cet exercice ici..* *
 
-
+**Exercice 4 :**  
+Pourquoi cette solution (cet atelier) ne peux pas être utilisé dans un vrai environnement de production ? Que manque-t-il ?   
+  
+* *..Répondez à cet exercice ici..* *
+  
+**Exercice 5 :**  
+Proposez une archtecture plus robuste.   
+  
+* *..Répondez à cet exercice ici..* *
 
 ---------------------------------------------------
-Séquence 4 : Documentation  
-Difficulté : Facile (~30 minutes)
+Séquence 6 : Ateliers  
+Difficulté : Moyenne (~2 heures)
 ---------------------------------------------------
-**Complétez et documentez ce fichier README.md** pour nous expliquer comment utiliser votre solution.  
-Faites preuve de pédagogie et soyez clair dans vos expliquations et processus de travail.  
-   
+### **Atelier 1 : Ajoutez une fonctionnalité à votre application**  
+**Ajouter une route GET /status** dans votre application qui affiche en JSON :
+* count : nombre d’événements en base
+* last_backup_file : nom du dernier backup présent dans /backup
+* backup_age_seconds : âge du dernier backup
+
+* *..**Déposez ici une copie d'écran** de votre réussite..* *
+
+---------------------------------------------------
+### **Atelier 2 : Choisir notre point de restauration**  
+Aujourd’hui nous restaurobs “le dernier backup”. Nous souhaitons **ajouter la capacité de choisir un point de restauration**.
+
+* *..Décrir ici votre procédure de restauration (votre runbook)..* *  
+  
 ---------------------------------------------------
 Evaluation
 ---------------------------------------------------
-Cet atelier, **noté sur 20 points**, est évalué sur la base du barème suivant :  
-- Repository exécutable sans erreur majeure (4 points)
-- Fonctionnement conforme au scénario annoncé (4 points)
-- Degré d'automatisation du projet (utilisation de Makefile ? script ? ...) (4 points)
-- Qualité du Readme (lisibilité, erreur, ...) (4 points)
+Cet atelier PRA PCA, **noté sur 20 points**, est évalué sur la base du barème suivant :  
+- Série d'exerices (5 points)
+- Atelier N°1 - Ajout d'un fonctionnalité (4 points)
+- Atelier N°2 - Choisir son point de restauration (4 points)
+- Qualité du Readme (lisibilité, erreur, ...) (3 points)
 - Processus travail (quantité de commits, cohérence globale, interventions externes, ...) (4 points) 
-
 
