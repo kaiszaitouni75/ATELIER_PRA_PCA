@@ -231,27 +231,27 @@ Faites preuve de pédagogie et soyez clair dans vos explications et procedures d
 **Exercice 1 :**  
 Quels sont les composants dont la perte entraîne une perte de données ?  
   
-* *..Répondez à cet exercice ici..* *
+*..Répondez à cet exercice ici..*
 
 **Exercice 2 :**  
 Expliquez nous pourquoi nous n'avons pas perdu les données lors de la supression du PVC pra-data  
   
-* *..Répondez à cet exercice ici..* *
+*..Répondez à cet exercice ici..*
 
 **Exercice 3 :**  
 Quels sont les RTO et RPO de cette solution ?  
   
-* *..Répondez à cet exercice ici..* *
+*..Répondez à cet exercice ici..*
 
 **Exercice 4 :**  
 Pourquoi cette solution (cet atelier) ne peux pas être utilisé dans un vrai environnement de production ? Que manque-t-il ?   
   
-* *..Répondez à cet exercice ici..* *
+*..Répondez à cet exercice ici..*
   
 **Exercice 5 :**  
 Proposez une archtecture plus robuste.   
   
-* *..Répondez à cet exercice ici..* *
+*..Répondez à cet exercice ici..*
 
 ---------------------------------------------------
 Séquence 6 : Ateliers  
@@ -263,13 +263,13 @@ Difficulté : Moyenne (~2 heures)
 * last_backup_file : nom du dernier backup présent dans /backup
 * backup_age_seconds : âge du dernier backup
 
-* *..**Déposez ici une copie d'écran** de votre réussite..* *
+*..**Déposez ici une copie d'écran** de votre réussite..*
 
 ---------------------------------------------------
 ### **Atelier 2 : Choisir notre point de restauration**  
 Aujourd’hui nous restaurobs “le dernier backup”. Nous souhaitons **ajouter la capacité de choisir un point de restauration**.
 
-* *..Décrir ici votre procédure de restauration (votre runbook)..* *  
+*..Décrir ici votre procédure de restauration (votre runbook)..*  
   
 ---------------------------------------------------
 Evaluation
