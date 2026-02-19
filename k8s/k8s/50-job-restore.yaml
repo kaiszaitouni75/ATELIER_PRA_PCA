@@ -1,0 +1,4 @@
+env:
+  - name: BACKUP_FILE
+    value: "db_backup_20240601_143400.sqlite"  # ← fichier choisi
+    # Laisser vide ("") pour prendre automatiquement le dernier backup
