@@ -230,28 +230,72 @@ Faites preuve de pédagogie et soyez clair dans vos explications et procedures d
 
 **Exercice 1 :**  
 Quels sont les composants dont la perte entraîne une perte de données ?  
+
+Le seul composant dont la perte entraîne une perte de données est le PVC pra-backup.
+Voici pourquoi, composant par composant :
+
+Le Pod Flask → sa perte n'entraîne PAS de perte de données. Le pod est éphémère par nature : Kubernetes le recrée automatiquement et les données vivent dans le PVC pra-data, externe au pod.
+Le PVC pra-data (volume de production) → sa perte seule n'entraîne PAS de perte définitive, à condition que le PVC pra-backup soit intact et que les sauvegardes soient récentes. On peut restaurer depuis le backup.
+Le CronJob sqlite-backup → si on le perd sans avoir de backup récent, on perd les données écrites depuis le dernier backup. Sa perte n'est critique que si elle se cumule avec la perte de pra-data.
+Le PVC pra-backup → c'est le composant critique. Si ce volume est perdu en même temps que pra-data, il n'existe aucune copie des données et la perte est totale et irréversible.
   
-*..Répondez à cet exercice ici..*
 
 **Exercice 2 :**  
 Expliquez nous pourquoi nous n'avons pas perdu les données lors de la supression du PVC pra-data  
   
-*..Répondez à cet exercice ici..*
+Nous n'avons pas perdu les données parce que le CronJob sqlite-backup effectuait une sauvegarde automatique toutes les minutes de la base SQLite depuis pra-data vers le PVC pra-backup.
+Au moment de la destruction du PVC pra-data, une copie récente de la base de données existait donc déjà sur pra-backup. La procédure de restauration (50-job-restore.yaml) a simplement copié le dernier fichier de backup depuis pra-backup vers le nouveau PVC pra-data vide, recréant ainsi l'état de la base au moment du dernier backup.
+C'est le principe fondamental du PRA : découpler les données de l'infrastructure et maintenir des copies sur un support indépendant.
 
 **Exercice 3 :**  
 Quels sont les RTO et RPO de cette solution ?  
-  
-*..Répondez à cet exercice ici..*
+
+RPO (Recovery Point Objective) — Combien de données peut-on perdre ?
+Le CronJob sauvegarde toutes les minutes. Dans le pire des cas, si le sinistre survient juste avant une sauvegarde, on perd jusqu'à 1 minute de données. Le RPO est donc de ~1 minute.
+RTO (Recovery Time Objective) — Combien de temps pour reprendre le service ?
+La procédure de restauration manuelle comprend plusieurs étapes : scale down du déploiement, suppression des jobs, recréation de l'infrastructure (kubectl apply), lancement du job de restauration, port-forward, et vérification. Dans cet atelier, cela prend environ 5 à 15 minutes selon la familiarité de l'opérateur avec les commandes. Le RTO est donc de ~5 à 15 minutes.
 
 **Exercice 4 :**  
 Pourquoi cette solution (cet atelier) ne peux pas être utilisé dans un vrai environnement de production ? Que manque-t-il ?   
   
-*..Répondez à cet exercice ici..*
+Cette solution est un excellent support pédagogique mais présente plusieurs limites critiques pour un vrai environnement de production :
+Limites techniques :
+
+Pas de réplication géographique : les deux PVC (pra-data et pra-backup) sont sur le même cluster K3d local. Un sinistre physique (incendie, panne du serveur hôte) détruit les deux volumes simultanément.
+SQLite n'est pas adapté à une charge de production : il ne supporte pas la concurrence en écriture et n'offre aucune réplication native.
+Le backup toutes les minutes n'est pas atomique : si une écriture est en cours au moment du backup, la copie peut être corrompue.
+Pas de chiffrement des données au repos ni en transit.
+Pas de monitoring ni d'alerting : aucun système ne détecte automatiquement un échec de backup ou un pod en erreur.
+
+Limites organisationnelles :
+
+La procédure de restauration est entièrement manuelle — risque d'erreur humaine sous stress.
+Pas de test de restauration régulier (un backup non testé n'est pas un backup fiable).
+Pas de documentation de runbook formelle ni de responsable désigné.
   
 **Exercice 5 :**  
 Proposez une archtecture plus robuste.   
   
-*..Répondez à cet exercice ici..*
+Pour un environnement de production, voici une architecture renforcée autour de trois axes :
+1. Base de données résiliente
+Remplacer SQLite par une base de données managée et répliquée, comme PostgreSQL en mode haute disponibilité (ex: via l'opérateur CloudNativePG sur Kubernetes) avec réplication synchrone sur au moins 2 nœuds. Cela élimine le SPOF base de données.
+2. Sauvegardes externalisées et géo-redondantes
+Les backups doivent être envoyés hors du cluster, vers un stockage objet externe comme AWS S3, Azure Blob Storage ou MinIO dans une région distincte. L'outil Velero permet de sauvegarder à la fois les volumes Kubernetes et les manifests de configuration. On planifie des backups toutes les 15 minutes (RPO cible) avec une rétention de 30 jours.
+3. Observabilité et automatisation de la restauration
+Mettre en place Prometheus + Grafana pour monitorer l'état des pods, des PVC et la fraîcheur des backups. Des alertes sont déclenchées si un backup n'a pas eu lieu depuis X minutes. La procédure de restauration est scriptée et testée mensuellement (Game Day).
+Architecture cible résumée :
+[Clients]
+    ↓
+[Ingress Controller + TLS]
+    ↓
+[Pods Flask — HPA (auto-scaling)]
+    ↓
+[PostgreSQL HA — 2 réplicas synchrones]
+    ↓
+[Velero → Backup S3 région A + réplication région B]
+    ↓
+[Monitoring : Prometheus / Grafana / Alertmanager]
+Cette architecture vise un RPO < 15 min et un RTO < 30 min, avec restauration semi-automatisée.
 
 ---------------------------------------------------
 Séquence 6 : Ateliers  
