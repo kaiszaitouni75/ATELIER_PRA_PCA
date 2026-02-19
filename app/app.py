@@ -1,8 +1,8 @@
 import os
-import time
 import sqlite3
 from datetime import datetime
 from flask import Flask, jsonify, request
+import time
 
 DB_PATH = os.getenv("DB_PATH", "/data/app.db")
 
@@ -88,52 +88,34 @@ def count():
     conn.close()
 
     return jsonify(count=n)
+@app.get("/status")
+def status():
+    init_db()
+#Recuperer le count des messages
+    conn = get_conn()
+    cur = conn.execute("SELECT id COUNT (*) FROM events")
+    count_val = cur.fetchone()[0]
+    conn.close()
 
+    backup_dir = "/backup"
+    last_backup_file = "none"
+    backup_age_seconds = -1
+#Backups
+    if os.path.exists(backup_dir):
+        files = [f for f in os.listdir(backup_dir) if f.endswith(".db")]
+        if files:
+            # Récupérer le fichier le plus récent par date de modification
+            full_paths = [os.path.join(backup_dir, f) for f in files]
+            latest_path = max(full_paths, key=os.path.getmtime)
+            last_backup_file = os.path.basename(latest_path)
+            backup_age_seconds = int(time.time() - os.path.getmtime(latest_path))
+
+    return jsonify(
+        count=count_val,
+        last_backup_file=last_backup_file,
+        backup_age_seconds=backup_age_seconds
+    )
 # ---------- Main ----------
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=8080)
-
-
-
-
-
-BACKUP_DIR = "/backup"
-DB_PATH    = "/data/db.sqlite"
-
-@app.route("/status")
-def status():
-    # 1. Nombre d'événements en base
-    count = 0
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM messages")
-        count = cursor.fetchone()[0]
-        conn.close()
-    except Exception as e:
-        count = f"error: {str(e)}"
-
-    # 2. Dernier fichier de backup et son âge
-    last_backup_file   = None
-    backup_age_seconds = None
-    try:
-        files = sorted(
-            [f for f in os.listdir(BACKUP_DIR) if os.path.isfile(os.path.join(BACKUP_DIR, f))],
-            key=lambda f: os.path.getmtime(os.path.join(BACKUP_DIR, f))
-        )
-        if files:
-            last_backup_file   = files[-1]
-            last_backup_path   = os.path.join(BACKUP_DIR, last_backup_file)
-            backup_age_seconds = int(time.time() - os.path.getmtime(last_backup_path))
-        else:
-            last_backup_file   = "aucun backup trouvé"
-            backup_age_seconds = None
-    except Exception as e:
-        last_backup_file = f"error: {str(e)}"
-
-    return jsonify({
-        "count":              count,
-        "last_backup_file":   last_backup_file,
-        "backup_age_seconds": backup_age_seconds
-    })
